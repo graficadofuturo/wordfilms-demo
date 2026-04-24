@@ -584,7 +584,7 @@ export const DevMode: React.FC<DevModeProps> = ({ data: baseData, onSave, onChan
  const updateContact = (index: number, field: 'label' | 'value' | 'link' | 'icon', value: string) => {
  const newContact = [...((localData.contact as any)?.items || [])];
  newContact[index] = { ...newContact[index], [field]: value };
- setLocalData({ ...localData, contact: newContact });
+ setLocalData({ ...localData, contact: { ...localData.contact, items: newContact } });
  };
 
  const addContactItem = () => {
@@ -593,7 +593,7 @@ export const DevMode: React.FC<DevModeProps> = ({ data: baseData, onSave, onChan
 
  const removeContactItem = (index: number) => {
  const newContact = ((localData.contact as any)?.items || []).filter((_: any, i: number) => i !== index);
- setLocalData({ ...localData, contact: newContact });
+ setLocalData({ ...localData, contact: { ...localData.contact, items: newContact } });
  };
 
  const toggleSection = (section: keyof SectionConfig) => {
