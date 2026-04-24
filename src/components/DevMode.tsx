@@ -1,13 +1,22 @@
+
 import React, { useState, useEffect, useRef } from 'react';
-import { SiteData, SectionConfig, StyleConfig } from '../types';
-import { Save, Plus, Trash2, ArrowUp, ArrowDown, LogOut, Upload, Loader2, ChevronDown, ChevronUp, Smartphone, Monitor, Eye, X } from 'lucide-react';
+import { SiteData, SectionConfig, StyleConfig, PortfolioItem, ServiceItem } from '../types';
+import { Save, Plus, Trash2, ArrowUp, ArrowDown, LogOut, Upload, Loader2, ChevronDown, ChevronUp, Smartphone, Monitor, Eye, X, Check, Mail, Instagram, MapPin, Phone, Globe, Youtube, Linkedin, Twitter, Facebook, MessageSquare, Send } from 'lucide-react';
 import { GOOGLE_FONTS } from '../lib/fonts';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const LucideIcons = { Check, Mail, Instagram, MapPin, Phone, Globe, Youtube, Linkedin, Twitter, Facebook, MessageSquare, Send };
 
 function cn(...inputs: ClassValue[]) {
  return twMerge(clsx(inputs));
 }
+
+const DynamicIcon = ({ name, size = 20, className }: { name: string, size?: number, className?: string }) => {
+  const Icon = (LucideIcons as any)[name] || LucideIcons.Mail;
+  return <Icon size={size} className={className} />;
+};
 
 interface DevModeProps {
  data: SiteData;
@@ -168,7 +177,7 @@ const CustomDropdown = ({
 };
 
 const RichTextarea = ({ 
- value, 
+ value = "", 
  onChange, 
  onSelect, 
  data, 
@@ -202,7 +211,6 @@ const RichTextarea = ({
  end: textareaRef.current.selectionEnd,
  focused: true
  });
- // Update selection in DevMode
  onSelect({ currentTarget: textareaRef.current } as any, context);
  } else if (textareaRef.current && document.activeElement !== textareaRef.current) {
  setSelection(prev => ({ ...prev, focused: false }));
@@ -211,7 +219,7 @@ const RichTextarea = ({
 
  document.addEventListener('selectionchange', handleSelectionChange);
  return () => document.removeEventListener('selectionchange', handleSelectionChange);
- }, []);
+ }, [context, onSelect]);
 
  const handleScroll = () => {
  if (textareaRef.current && preRef.current) {
@@ -229,7 +237,7 @@ const RichTextarea = ({
  onSelect(e, context);
  };
 
- const baseFontFamily = data.styles?.fontFamily ? `"${data.styles.fontFamily}", sans-serif` : undefined;
+ const baseFontFamily = data?.styles?.fontFamily ? `"${data.styles.fontFamily}", sans-serif` : undefined;
 
  let globalCharIndex = 0;
 
@@ -248,16 +256,15 @@ const RichTextarea = ({
  }}
  aria-hidden="true"
  >
- {value.split('\n').map((line, lineIdx, linesArray) => {
+ {(value || "").split('\n').map((line, lineIdx, linesArray) => {
  const isLastLine = lineIdx === linesArray.length - 1;
  
  let lineLineHeight: string | undefined = undefined;
- // Split by non-word characters but keep them as separate parts
  const parts = line.split(/([^a-zA-Z0-9À-ÿ']+)/).filter(p => p !== '');
  
  for (const part of parts) {
  if (!part.trim()) continue;
- const style = (context && data.wordStyles?.[`${context}:${part}`]) || data.wordStyles?.[part];
+ const style = (context && data?.wordStyles?.[`${context}:${part}`]) || data?.wordStyles?.[part];
  if (style?.lineHeight !== undefined) {
  const formatValue = (val: string | number | undefined) => {
  if (val === undefined || val === '' || String(val).toLowerCase() === 'auto') return undefined;
@@ -301,8 +308,8 @@ const RichTextarea = ({
  return <span key={i}>{part}</span>;
  }
 
- const style = (context && data.wordStyles?.[`${context}:${part}`]) || data.wordStyles?.[part] || {};
- const isOutline = style.isOutline !== undefined ? style.isOutline : data.outlinedWords?.includes(part);
+ const style = (context && data?.wordStyles?.[`${context}:${part}`]) || data?.wordStyles?.[part] || {};
+ const isOutline = style.isOutline !== undefined ? style.isOutline : data?.outlinedWords?.includes(part);
  const isSelected = selection.focused && selection.start < globalCharIndex && selection.end > partStart;
 
  const formatValue = (val: string | number | undefined) => {
@@ -406,11 +413,6 @@ export const DevMode: React.FC<DevModeProps> = ({ data: baseData, onSave, onChan
  const desktopIframeRef = useRef<HTMLIFrameElement>(null);
  const desktopPreviewContainerRef = useRef<HTMLDivElement>(null);
 
- const localDataToSync = React.useMemo(() => 
- viewMode === 'mobile' ? { ...baseData, ...mobileData } as SiteData : baseData,
- [baseData, mobileData, viewMode]
- );
-
  useEffect(() => {
  if (iframeRef.current?.contentWindow) {
  iframeRef.current.contentWindow.postMessage({ type: 'DEV_MODE_PREVIEW_UPDATE', data: localData }, '*');
@@ -508,7 +510,7 @@ export const DevMode: React.FC<DevModeProps> = ({ data: baseData, onSave, onChan
  };
 
  const updatePortfolio = (index: number, field: keyof PortfolioItem, value: string) => {
- const newPortfolio = [...localData.portfolio];
+ const newPortfolio = [...(localData.portfolio || [])];
  newPortfolio[index] = { ...newPortfolio[index], [field]: value };
  setLocalData({ ...localData, portfolio: newPortfolio });
  };
@@ -521,16 +523,16 @@ export const DevMode: React.FC<DevModeProps> = ({ data: baseData, onSave, onChan
  thumbnailUrl: 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&q=80',
  videoUrl: ''
  };
- setLocalData({ ...localData, portfolio: [...localData.portfolio, newItem] });
+ setLocalData({ ...localData, portfolio: [...(localData.portfolio || []), newItem] });
  };
 
  const removePortfolioItem = (index: number) => {
- const newPortfolio = localData.portfolio.filter((_, i) => i !== index);
+ const newPortfolio = (localData.portfolio || []).filter((_, i) => i !== index);
  setLocalData({ ...localData, portfolio: newPortfolio });
  };
 
  const updateExpertise = (index: number, field: keyof ServiceItem, value: string) => {
- const newExpertise = [...localData.expertise];
+ const newExpertise = [...(localData.expertise || [])];
  newExpertise[index] = { ...newExpertise[index], [field]: value };
  setLocalData({ ...localData, expertise: newExpertise });
  };
@@ -541,56 +543,56 @@ export const DevMode: React.FC<DevModeProps> = ({ data: baseData, onSave, onChan
  title: 'Nova Expertise',
  description: 'Descrição da expertise...'
  };
- setLocalData({ ...localData, expertise: [...localData.expertise, newItem] });
+ setLocalData({ ...localData, expertise: [...(localData.expertise || []), newItem] });
  };
 
  const removeExpertiseItem = (index: number) => {
- const newExpertise = localData.expertise.filter((_, i) => i !== index);
+ const newExpertise = (localData.expertise || []).filter((_, i) => i !== index);
  setLocalData({ ...localData, expertise: newExpertise });
  };
 
  const updateNumber = (index: number, field: 'value' | 'label', value: string) => {
- const newNumbers = [...localData.numbers];
+ const newNumbers = [...(localData.numbers || [])];
  newNumbers[index] = { ...newNumbers[index], [field]: value };
  setLocalData({ ...localData, numbers: newNumbers });
  };
 
  const addNumberItem = () => {
- setLocalData({ ...localData, numbers: [...localData.numbers, { value: '0', label: 'Novo Item' }] });
+ setLocalData({ ...localData, numbers: [...(localData.numbers || []), { value: '0', label: 'Novo Item' }] });
  };
 
  const removeNumberItem = (index: number) => {
- const newNumbers = localData.numbers.filter((_, i) => i !== index);
+ const newNumbers = (localData.numbers || []).filter((_, i) => i !== index);
  setLocalData({ ...localData, numbers: newNumbers });
  };
 
  const updateClient = (index: number, field: 'logoUrl' | 'name', value: string) => {
- const newClients = [...localData.clients];
+ const newClients = [...(localData.clients || [])];
  newClients[index] = { ...newClients[index], [field]: value };
  setLocalData({ ...localData, clients: newClients });
  };
 
  const addClientItem = () => {
- setLocalData({ ...localData, clients: [...localData.clients, { logoUrl: 'https://images.unsplash.com/photo-1614850523296-d8c1af93d400?auto=format&fit=crop&q=80', name: 'Novo Cliente' }] });
+ setLocalData({ ...localData, clients: [...(localData.clients || []), { logoUrl: 'https://images.unsplash.com/photo-1614850523296-d8c1af93d400?auto=format&fit=crop&q=80', name: 'Novo Cliente' }] });
  };
 
  const removeClientItem = (index: number) => {
- const newClients = localData.clients.filter((_, i) => i !== index);
+ const newClients = (localData.clients || []).filter((_, i) => i !== index);
  setLocalData({ ...localData, clients: newClients });
  };
 
  const updateContact = (index: number, field: 'label' | 'value' | 'link' | 'icon', value: string) => {
- const newContact = [...localData.contact];
+ const newContact = [...(localData.contact || [])];
  newContact[index] = { ...newContact[index], [field]: value };
  setLocalData({ ...localData, contact: newContact });
  };
 
  const addContactItem = () => {
- setLocalData({ ...localData, contact: [...localData.contact, { label: 'Novo', value: 'Valor', icon: 'Mail' }] });
+ setLocalData({ ...localData, contact: [...(localData.contact || []), { label: 'Novo', value: 'Valor', icon: 'Mail' }] });
  };
 
  const removeContactItem = (index: number) => {
- const newContact = localData.contact.filter((_, i) => i !== index);
+ const newContact = (localData.contact || []).filter((_, i) => i !== index);
  setLocalData({ ...localData, contact: newContact });
  };
 
@@ -605,7 +607,7 @@ export const DevMode: React.FC<DevModeProps> = ({ data: baseData, onSave, onChan
  };
 
  const moveSection = (section: keyof SectionConfig, direction: 'up' | 'down') => {
- const sections = Object.entries(localData.sections) as [keyof SectionConfig, any][];
+ const sections = Object.entries(localData.sections || {}) as [keyof SectionConfig, any][];
  const index = sections.findIndex(([key]) => key === section);
  if (index === -1) return;
 
@@ -626,7 +628,7 @@ export const DevMode: React.FC<DevModeProps> = ({ data: baseData, onSave, onChan
  Estrutura do Site
  </h2>
  <div className="space-y-4">
- {Object.entries(localData.sections).map(([key, config], idx, arr) => (
+ {Object.entries(localData.sections || {}).map(([key, config], idx, arr) => (
  <div key={key} className="space-y-2">
  <div className="flex items-center justify-between p-4 bg-zinc-950/50 rounded-2xl border border-zinc-800/50 hover:border-emerald-500/20 transition-all group">
  <div className="flex items-center gap-4">
@@ -900,7 +902,7 @@ export const DevMode: React.FC<DevModeProps> = ({ data: baseData, onSave, onChan
  <div className="relative">
  <label className="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-3">Título Principal</label>
  <RichTextarea 
- value={localData.hero.title} 
+ value={localData?.hero?.title} 
  onChange={val => setLocalData({ ...localData, hero: { ...localData.hero, title: val } })}
  onSelect={handleTextSelect}
  data={localData}
@@ -911,10 +913,10 @@ export const DevMode: React.FC<DevModeProps> = ({ data: baseData, onSave, onChan
  targetWidth={viewMode === 'mobile' ? 375 : 1920}
  />
  </div>
- <div>
+ <div className="relative">
  <label className="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-3">Subtítulo / Descrição</label>
  <RichTextarea 
- value={localData.hero.subtitle} 
+ value={localData?.hero?.subtitle} 
  onChange={val => setLocalData({ ...localData, hero: { ...localData.hero, subtitle: val } })}
  onSelect={handleTextSelect}
  data={localData}
@@ -930,7 +932,7 @@ export const DevMode: React.FC<DevModeProps> = ({ data: baseData, onSave, onChan
  <div className="flex gap-3">
  <input 
  type="text" 
- value={localData.hero.videoUrl} 
+ value={localData?.hero?.videoUrl || ''} 
  onChange={e => setLocalData({ ...localData, hero: { ...localData.hero, videoUrl: e.target.value } })}
  className="flex-1 bg-zinc-950/50 border border-zinc-800 rounded-2xl p-4 text-zinc-400 text-sm focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all outline-none"
  />
@@ -946,7 +948,7 @@ export const DevMode: React.FC<DevModeProps> = ({ data: baseData, onSave, onChan
  <input 
  type="text" 
  value={(() => {
- const val = localData.hero.logoSize || '';
+ const val = localData?.hero?.logoSize || '';
  if (/^\d+$/.test(val)) return val + 'px';
  return val;
  })()} 
@@ -1005,7 +1007,7 @@ export const DevMode: React.FC<DevModeProps> = ({ data: baseData, onSave, onChan
  </div>
 
  <div className="space-y-6">
- {localData.portfolio.map((item, index) => (
+ {(localData.portfolio || []).map((item, index) => (
  <div key={item.id} className="group bg-zinc-950/30 p-6 rounded-2xl border border-zinc-800/50 relative hover:border-emerald-500/20 transition-all">
  <button onClick={() => removePortfolioItem(index)} className="absolute top-6 right-6 text-zinc-600 hover:text-red-500 transition-colors">
  <Trash2 size={18} />
@@ -1091,7 +1093,7 @@ export const DevMode: React.FC<DevModeProps> = ({ data: baseData, onSave, onChan
  <div>
  <label className="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-3">Título da Seção</label>
  <RichTextarea 
- value={localData.about.title} 
+ value={localData?.about?.title} 
  onChange={val => setLocalData({ ...localData, about: { ...localData.about, title: val } })}
  onSelect={handleTextSelect}
  data={localData}
@@ -1105,7 +1107,7 @@ export const DevMode: React.FC<DevModeProps> = ({ data: baseData, onSave, onChan
  <div>
  <label className="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-3">Texto Principal</label>
  <RichTextarea 
- value={localData.about.text} 
+ value={localData?.about?.text} 
  onChange={val => setLocalData({ ...localData, about: { ...localData.about, text: val } })}
  onSelect={handleTextSelect}
  data={localData}
@@ -1122,7 +1124,7 @@ export const DevMode: React.FC<DevModeProps> = ({ data: baseData, onSave, onChan
  <div className="flex gap-3">
  <input 
  type="text" 
- value={localData.about.imageUrl} 
+ value={localData?.about?.imageUrl || ''} 
  onChange={e => setLocalData({ ...localData, about: { ...localData.about, imageUrl: e.target.value } })}
  className="flex-1 bg-zinc-950/50 border border-zinc-800 rounded-2xl p-4 text-zinc-400 text-sm focus:border-emerald-500/50 outline-none"
  />
@@ -1136,7 +1138,7 @@ export const DevMode: React.FC<DevModeProps> = ({ data: baseData, onSave, onChan
  <label className="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-3">Largura da Imagem (px)</label>
  <input 
  type="number" 
- value={localData.about.imageWidth || 600} 
+ value={localData?.about?.imageWidth || 600} 
  onChange={e => setLocalData({ ...localData, about: { ...localData.about, imageWidth: parseInt(e.target.value) } })}
  className="w-full bg-zinc-950/50 border border-zinc-800 rounded-2xl p-4 text-white text-sm focus:border-emerald-500/50 outline-none"
  />
@@ -1145,7 +1147,7 @@ export const DevMode: React.FC<DevModeProps> = ({ data: baseData, onSave, onChan
  <label className="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-3">Altura da Imagem (px)</label>
  <input 
  type="number" 
- value={localData.about.imageHeight || 800} 
+ value={localData?.about?.imageHeight || 800} 
  onChange={e => setLocalData({ ...localData, about: { ...localData.about, imageHeight: parseInt(e.target.value) } })}
  className="w-full bg-zinc-950/50 border border-zinc-800 rounded-2xl p-4 text-white text-sm focus:border-emerald-500/50 outline-none"
  />
@@ -1193,7 +1195,7 @@ export const DevMode: React.FC<DevModeProps> = ({ data: baseData, onSave, onChan
  </div>
 
  <div className="space-y-6">
- {localData.expertise.map((item, index) => (
+ {(localData.expertise || []).map((item, index) => (
  <div key={item.id} className="group bg-zinc-950/30 p-6 rounded-2xl border border-zinc-800/50 relative hover:border-emerald-500/20 transition-all">
  <button onClick={() => removeExpertiseItem(index)} className="absolute top-6 right-6 text-zinc-600 hover:text-red-500 transition-colors">
  <Trash2 size={18} />
@@ -1280,7 +1282,7 @@ export const DevMode: React.FC<DevModeProps> = ({ data: baseData, onSave, onChan
  </div>
 
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
- {localData.numbers.map((item, index) => (
+ {(localData.numbers || []).map((item, index) => (
  <div key={index} className="bg-zinc-950/30 p-6 rounded-2xl border border-zinc-800/50 relative group">
  <button onClick={() => removeNumberItem(index)} className="absolute top-4 right-4 text-zinc-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all">
  <Trash2 size={14} />
@@ -1325,7 +1327,7 @@ export const DevMode: React.FC<DevModeProps> = ({ data: baseData, onSave, onChan
  Clientes
  </h2>
  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
- {localData.clients.map((client, index) => (
+ {(localData.clients || []).map((client, index) => (
  <div key={index} className="bg-zinc-950/30 p-4 rounded-2xl border border-zinc-800/50 relative group">
  <button onClick={() => removeClientItem(index)} className="absolute top-2 right-2 text-zinc-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all">
  <Trash2 size={14} />
@@ -1405,7 +1407,7 @@ export const DevMode: React.FC<DevModeProps> = ({ data: baseData, onSave, onChan
  </div>
 
  <div className="space-y-4">
- {localData.contact.map((item, index) => (
+ {(localData.contact || []).map((item, index) => (
  <div key={index} className="bg-zinc-950/30 p-6 rounded-2xl border border-zinc-800/50 relative group">
  <button onClick={() => removeContactItem(index)} className="absolute top-4 right-4 text-zinc-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all">
  <Trash2 size={14} />
@@ -1497,9 +1499,9 @@ export const DevMode: React.FC<DevModeProps> = ({ data: baseData, onSave, onChan
  >
  <div className={cn(
  "w-4 h-4 rounded border flex items-center justify-center transition-all",
- floatingMenu.words.every(w => localData.outlinedWords?.includes(w)) ? "bg-emerald-500 border-emerald-500" : "border-zinc-600 group-hover:border-zinc-400"
+ floatingMenu.words.every(w => localData?.outlinedWords?.includes(w)) ? "bg-emerald-500 border-emerald-500" : "border-zinc-600 group-hover:border-zinc-400"
  )}>
- {floatingMenu.words.every(w => localData.outlinedWords?.includes(w)) && <LucideIcons.Check size={10} className="text-black" />}
+ {floatingMenu.words.every(w => localData?.outlinedWords?.includes(w)) && <LucideIcons.Check size={10} className="text-black" />}
  </div>
  <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400 group-hover:text-white">Outline</span>
  </button>
@@ -1510,7 +1512,7 @@ export const DevMode: React.FC<DevModeProps> = ({ data: baseData, onSave, onChan
  <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Fonte:</span>
  <CustomDropdown 
  options={GOOGLE_FONTS.map(f => ({ label: f.name, value: f.name }))}
- value={floatingMenu.words.length === 1 ? localData.wordStyles?.[floatingMenu.context ? `${floatingMenu.context}:${floatingMenu.words[0]}` : floatingMenu.words[0]]?.fontFamily || '' : ''}
+ value={floatingMenu.words.length === 1 ? localData?.wordStyles?.[floatingMenu.context ? `${floatingMenu.context}:${floatingMenu.words[0]}` : floatingMenu.words[0]]?.fontFamily || '' : ''}
  onChange={(val) => floatingMenu.words.forEach(w => updateWordStyle(w, { fontFamily: val }, floatingMenu.context))}
  placeholder="Padrão"
  className="w-32"
@@ -1521,7 +1523,7 @@ export const DevMode: React.FC<DevModeProps> = ({ data: baseData, onSave, onChan
  <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Tamanho:</span>
  <input 
  type="text" 
- value={floatingMenu.words.length === 1 ? localData.wordStyles?.[floatingMenu.context ? `${floatingMenu.context}:${floatingMenu.words[0]}` : floatingMenu.words[0]]?.fontSize || '' : ''}
+ value={floatingMenu.words.length === 1 ? localData?.wordStyles?.[floatingMenu.context ? `${floatingMenu.context}:${floatingMenu.words[0]}` : floatingMenu.words[0]]?.fontSize || '' : ''}
  onChange={(e) => floatingMenu.words.forEach(w => updateWordStyle(w, { fontSize: e.target.value }, floatingMenu.context))}
  placeholder="Auto"
  className="w-16 bg-zinc-800/50 border border-zinc-700/50 rounded-lg px-2 py-1.5 text-[10px] text-white outline-none focus:border-emerald-500/50"
@@ -1532,7 +1534,7 @@ export const DevMode: React.FC<DevModeProps> = ({ data: baseData, onSave, onChan
  <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Cor:</span>
  <div className="flex items-center gap-2 bg-zinc-800/50 p-1 rounded-lg border border-zinc-700/50">
  <DebouncedColorInput 
- value={floatingMenu.words.length === 1 ? localData.wordStyles?.[floatingMenu.context ? `${floatingMenu.context}:${floatingMenu.words[0]}` : floatingMenu.words[0]]?.color || '#ffffff' : '#ffffff'}
+ value={floatingMenu.words.length === 1 ? localData?.wordStyles?.[floatingMenu.context ? `${floatingMenu.context}:${floatingMenu.words[0]}` : floatingMenu.words[0]]?.color || '#ffffff' : '#ffffff'}
  onChange={(val) => floatingMenu.words.forEach(w => updateWordStyle(w, { color: val }, floatingMenu.context))}
  className="w-6 h-6 rounded-md bg-transparent border-0 cursor-pointer"
  />
@@ -1578,11 +1580,11 @@ export const DevMode: React.FC<DevModeProps> = ({ data: baseData, onSave, onChan
  onClick={() => toggleWordOutline(selectedText.word)}
  className={cn(
  "w-full flex items-center justify-between p-3 rounded-xl border transition-all group",
- localData.outlinedWords?.includes(selectedText.word) ? "bg-emerald-500 border-emerald-500 text-black" : "bg-zinc-800/50 border-zinc-700/50 text-zinc-400 hover:border-zinc-500"
+ localData?.outlinedWords?.includes(selectedText.word) ? "bg-emerald-500 border-emerald-500 text-black" : "bg-zinc-800/50 border-zinc-700/50 text-zinc-400 hover:border-zinc-500"
  )}
  >
  <span className="text-[10px] font-black uppercase tracking-widest">Efeito Outline</span>
- {localData.outlinedWords?.includes(selectedText.word) ? <LucideIcons.Check size={14} /> : <div className="w-3.5 h-3.5 rounded border border-zinc-600 group-hover:border-zinc-500" />}
+ {localData?.outlinedWords?.includes(selectedText.word) ? <LucideIcons.Check size={14} /> : <div className="w-3.5 h-3.5 rounded border border-zinc-600 group-hover:border-zinc-500" />}
  </button>
  </div>
 
@@ -1590,7 +1592,7 @@ export const DevMode: React.FC<DevModeProps> = ({ data: baseData, onSave, onChan
  <label className="block text-[8px] font-black uppercase tracking-widest text-zinc-500 mb-2">Família da Fonte</label>
  <CustomDropdown 
  options={GOOGLE_FONTS.map(f => ({ label: f.name, value: f.name }))}
- value={localData.wordStyles?.[selectedText.context ? `${selectedText.context}:${selectedText.word}` : selectedText.word]?.fontFamily || ''}
+ value={localData?.wordStyles?.[selectedText.context ? `${selectedText.context}:${selectedText.word}` : selectedText.word]?.fontFamily || ''}
  onChange={(val) => updateWordStyle(selectedText.word, { fontFamily: val }, selectedText.context)}
  placeholder="Fonte Padrão"
  />
@@ -1601,7 +1603,7 @@ export const DevMode: React.FC<DevModeProps> = ({ data: baseData, onSave, onChan
  <label className="block text-[8px] font-black uppercase tracking-widest text-zinc-500 mb-2">Tamanho</label>
  <input 
  type="text" 
- value={localData.wordStyles?.[selectedText.context ? `${selectedText.context}:${selectedText.word}` : selectedText.word]?.fontSize || ''}
+ value={localData?.wordStyles?.[selectedText.context ? `${selectedText.context}:${selectedText.word}` : selectedText.word]?.fontSize || ''}
  onChange={(e) => updateWordStyle(selectedText.word, { fontSize: e.target.value }, selectedText.context)}
  placeholder="Auto"
  className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-3 py-2 text-[10px] text-white outline-none focus:border-emerald-500/50"
@@ -1617,7 +1619,7 @@ export const DevMode: React.FC<DevModeProps> = ({ data: baseData, onSave, onChan
  { label: 'Bold', value: 'font-bold' },
  { label: 'Black', value: 'font-black' }
  ]}
- value={localData.wordStyles?.[selectedText.context ? `${selectedText.context}:${selectedText.word}` : selectedText.word]?.fontWeight || ''}
+ value={localData?.wordStyles?.[selectedText.context ? `${selectedText.context}:${selectedText.word}` : selectedText.word]?.fontWeight || ''}
  onChange={(val) => updateWordStyle(selectedText.word, { fontWeight: val }, selectedText.context)}
  placeholder="Peso"
  />
@@ -1629,7 +1631,7 @@ export const DevMode: React.FC<DevModeProps> = ({ data: baseData, onSave, onChan
  <label className="block text-[8px] font-black uppercase tracking-widest text-zinc-500 mb-2">Espaçamento</label>
  <input 
  type="text" 
- value={localData.wordStyles?.[selectedText.context ? `${selectedText.context}:${selectedText.word}` : selectedText.word]?.letterSpacing || ''}
+ value={localData?.wordStyles?.[selectedText.context ? `${selectedText.context}:${selectedText.word}` : selectedText.word]?.letterSpacing || ''}
  onChange={(e) => updateWordStyle(selectedText.word, { letterSpacing: e.target.value }, selectedText.context)}
  placeholder="0"
  className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-3 py-2 text-[10px] text-white outline-none focus:border-emerald-500/50"
@@ -1639,10 +1641,10 @@ export const DevMode: React.FC<DevModeProps> = ({ data: baseData, onSave, onChan
  <label className="block text-[8px] font-black uppercase tracking-widest text-zinc-500 mb-2">Altura Linha</label>
  <input 
  type="text" 
- value={localData.wordStyles?.[selectedText.context ? `${selectedText.context}:${selectedText.word}` : selectedText.word]?.lineHeight || ''}
+ value={localData?.wordStyles?.[selectedText.context ? `${selectedText.context}:${selectedText.word}` : selectedText.word]?.lineHeight || ''}
  onChange={(e) => updateWordStyle(selectedText.word, { lineHeight: e.target.value }, selectedText.context)}
  placeholder="1.2"
- className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-3 py-2 text-[10px] text-white outline-none focus:border-emerald-500/50"
+ className="w-full bg-zinc-900/50 border border-zinc-800 rounded-xl px-3 py-2 text-[10px] text-white outline-none focus:border-emerald-500/50"
  />
  </div>
  </div>
@@ -1651,13 +1653,13 @@ export const DevMode: React.FC<DevModeProps> = ({ data: baseData, onSave, onChan
  <label className="block text-[8px] font-black uppercase tracking-widest text-zinc-500 mb-2">Cor da Palavra</label>
  <div className="flex items-center gap-3 bg-zinc-800/50 p-2 rounded-xl border border-zinc-700/50">
  <DebouncedColorInput 
- value={localData.wordStyles?.[selectedText.context ? `${selectedText.context}:${selectedText.word}` : selectedText.word]?.color || '#ffffff'} 
+ value={localData?.wordStyles?.[selectedText.context ? `${selectedText.context}:${selectedText.word}` : selectedText.word]?.color || '#ffffff'} 
  onChange={(val) => updateWordStyle(selectedText.word, { color: val }, selectedText.context)}
  className="w-8 h-8 rounded-lg bg-transparent border-0 cursor-pointer"
  />
  <input 
  type="text" 
- value={localData.wordStyles?.[selectedText.context ? `${selectedText.context}:${selectedText.word}` : selectedText.word]?.color || '#ffffff'} 
+ value={localData?.wordStyles?.[selectedText.context ? `${selectedText.context}:${selectedText.word}` : selectedText.word]?.color || '#ffffff'} 
  onChange={(e) => updateWordStyle(selectedText.word, { color: e.target.value }, selectedText.context)}
  className="bg-transparent text-[10px] font-mono text-zinc-500 outline-none w-20"
  />
