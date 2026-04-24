@@ -34,7 +34,7 @@ function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-// --- COMPONENTS ---
+// --- COMPONENTS (Definitive Runtime Safety Fix Applied) ---
 
 class ErrorBoundary extends Component<{ children: React.ReactNode }, { hasError: boolean, error: any }> {
   state: { hasError: boolean, error: any };
@@ -654,7 +654,7 @@ export default function App() {
             <div className="hidden md:flex gap-8 text-[10px] font-bold uppercase tracking-[0.3em]">
               {currentView === 'home' ? (
                 <>
-                  {(activeData.sections || DEFAULT_SITE_DATA.sections!)
+                  {(Array.isArray(activeData.sections) ? activeData.sections : DEFAULT_SITE_DATA.sections!)
                     .filter(s => s.visible && s.type !== 'hero')
                     .sort((a, b) => a.order - b.order)
                     .map(section => {
@@ -747,7 +747,7 @@ export default function App() {
               className={activeData.styles?.fontFamily?.startsWith('font-') ? activeData.styles.fontFamily : ''}
               style={activeData.styles?.fontFamily && !activeData.styles.fontFamily.startsWith('font-') ? { fontFamily: `"${activeData.styles.fontFamily}", sans-serif` } : {}}
             >
-          {(activeData.sections || DEFAULT_SITE_DATA.sections!).filter(s => s.visible).sort((a, b) => a.order - b.order).map(section => {
+          {(Array.isArray(activeData.sections) ? activeData.sections : DEFAULT_SITE_DATA.sections!).filter(s => s.visible).sort((a, b) => a.order - b.order).map(section => {
             const bgType = section.bgType || (section.bgImageUrl ? 'image' : undefined);
             const sectionBg = bgType ? (
               <div 
@@ -961,7 +961,7 @@ export default function App() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
-            {activeData.portfolio.map((item, index) => (
+            {(Array.isArray(activeData.portfolio) ? activeData.portfolio : []).map((item, index) => (
               <motion.div 
                 key={item.id}
                 initial={{ opacity: 0, y: 100 }}
@@ -1128,7 +1128,7 @@ export default function App() {
           </SectionTitle>
           
           <div className="grid grid-cols-1 md:grid-cols-6 gap-px bg-zinc-800 border-y border-zinc-800 mt-10 md:mt-20">
-            {activeData.services.map((service, index) => {
+            {(Array.isArray(activeData.services) ? activeData.services : []).map((service, index) => {
               const totalServices = activeData.services.length;
               const isLastRow = index >= Math.floor((totalServices - 1) / 3) * 3;
               const orphans = totalServices % 3;
