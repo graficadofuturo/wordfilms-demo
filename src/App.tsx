@@ -1220,7 +1220,7 @@ export default function App() {
           </SectionTitle>
           
           <div className="grid grid-cols-3 md:flex md:flex-wrap justify-center gap-x-4 md:gap-x-32 gap-y-12 md:gap-y-32 mt-12 md:mt-32 max-w-6xl mx-auto">
-            {(activeData.contact.items || [
+            {(Array.isArray(activeData.contact.items) ? activeData.contact.items : [
               { id: "1", label: "Email", value: activeData.contact.email, link: `mailto:${activeData.contact.email}`, icon: "Mail" },
               { id: "2", label: "Instagram", value: activeData.contact.instagram, link: `https://instagram.com/${activeData.contact.instagram.replace('@', '')}`, icon: "Camera" },
               { id: "3", label: "Localização", value: activeData.contact.address, link: "", icon: "MapPin" }
