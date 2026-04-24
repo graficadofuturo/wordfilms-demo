@@ -616,7 +616,7 @@ export default function App() {
     }
   };
 
-  const isEditable = isVerified && user?.email === "graficadfuturo@gmail.com";
+  const isEditable = isVerified;
 
   // Force background visible for other views
   useEffect(() => {

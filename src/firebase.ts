@@ -83,9 +83,7 @@ export const initializeSiteData = async () => {
     const snapshot = await getDoc(siteDoc);
     if (!snapshot.exists()) {
       // Only attempt to write if we are the admin
-      if (auth.currentUser?.email === "graficadfuturo@gmail.com") {
-        await setDoc(siteDoc, DEFAULT_SITE_DATA);
-      }
+      await setDoc(siteDoc, DEFAULT_SITE_DATA);
     }
   } catch (error) {
     // If it's a permission error during initialization, we can often ignore it for non-admins
