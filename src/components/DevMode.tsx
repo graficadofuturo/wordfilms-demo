@@ -582,17 +582,17 @@ export const DevMode: React.FC<DevModeProps> = ({ data: baseData, onSave, onChan
  };
 
  const updateContact = (index: number, field: 'label' | 'value' | 'link' | 'icon', value: string) => {
- const newContact = [...(localData.contact || [])];
+ const newContact = [...((localData.contact as any)?.items || [])];
  newContact[index] = { ...newContact[index], [field]: value };
  setLocalData({ ...localData, contact: newContact });
  };
 
  const addContactItem = () => {
- setLocalData({ ...localData, contact: [...(localData.contact || []), { label: 'Novo', value: 'Valor', icon: 'Mail' }] });
+ setLocalData({ ...localData, contact: { ...localData.contact, items: [...((localData.contact as any)?.items || []), { id: Date.now().toString(), label: 'Novo', value: 'Valor', icon: 'Mail', link: '' }] } });
  };
 
  const removeContactItem = (index: number) => {
- const newContact = (localData.contact || []).filter((_, i) => i !== index);
+ const newContact = ((localData.contact as any)?.items || []).filter((_: any, i: number) => i !== index);
  setLocalData({ ...localData, contact: newContact });
  };
 
