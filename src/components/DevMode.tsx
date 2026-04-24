@@ -449,7 +449,24 @@ export const DevMode: React.FC<DevModeProps> = ({ data: baseData, onSave, onChan
  return () => window.removeEventListener('resize', handleResize);
  }, [showDesktopPreview]);
 
- const handleSave = async () => {
+ const toggleSection = (sectionId: string) => {
+    setLocalData(prev => ({
+      ...prev,
+      sections: (prev.sections || []).map(s => s.id === sectionId ? { ...s, visible: !s.visible } : s)
+    }));
+  };
+
+  const moveSection = (sectionId: string, direction: 'up' | 'down') => {
+    const sections = [...(localData.sections || [])];
+    const index = sections.findIndex(s => s.id === sectionId);
+    if (index === -1) return;
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= sections.length) return;
+    [sections[index], sections[newIndex]] = [sections[newIndex], sections[index]];
+    setLocalData({ ...localData, sections });
+  };
+
+  const handleSave = async () => {
  setIsSaving(true);
  try {
  await onSave(localData);
@@ -596,30 +613,9 @@ export const DevMode: React.FC<DevModeProps> = ({ data: baseData, onSave, onChan
  setLocalData({ ...localData, contact: { ...localData.contact, items: newContact } });
  };
 
- const toggleSection = (section: keyof SectionConfig) => {
- setLocalData(prev => ({
- ...prev,
- sections: {
- ...prev.sections,
- [section]: { ...prev.sections[section], enabled: !prev.sections[section].enabled }
- }
- }));
- };
-
- const moveSection = (section: keyof SectionConfig, direction: 'up' | 'down') => {
- const sections = Object.entries(localData.sections || {}) as [keyof SectionConfig, any][];
- const index = sections.findIndex(([key]) => key === section);
- if (index === -1) return;
-
- const newIndex = direction === 'up' ? index - 1 : index + 1;
- if (newIndex < 0 || newIndex >= sections.length) return;
-
- const newSections = [...sections];
- [newSections[index], newSections[newIndex]] = [newSections[newIndex], newSections[index]];
  
- const sectionsObj = Object.fromEntries(newSections) as SectionConfig;
- setLocalData({ ...localData, sections: sectionsObj });
- };
+
+ 
 
  const renderEstrutura = () => (
  <div className="bg-zinc-900/50 p-8 rounded-3xl border border-zinc-800/50 backdrop-blur-sm">
@@ -628,8 +624,8 @@ export const DevMode: React.FC<DevModeProps> = ({ data: baseData, onSave, onChan
  Estrutura do Site
  </h2>
  <div className="space-y-4">
- {Object.entries(localData.sections || {}).map(([key, config], idx, arr) => (
- <div key={key} className="space-y-2">
+ {(localData.sections || []).map((config, idx, arr) => (
+ <div key={config.id} className="space-y-2">
  <div className="flex items-center justify-between p-4 bg-zinc-950/50 rounded-2xl border border-zinc-800/50 hover:border-emerald-500/20 transition-all group">
  <div className="flex items-center gap-4">
  <div 
@@ -637,7 +633,7 @@ export const DevMode: React.FC<DevModeProps> = ({ data: baseData, onSave, onChan
  "w-5 h-5 rounded-md border flex items-center justify-center transition-all cursor-pointer",
  config.enabled ? "bg-emerald-500 border-emerald-500" : "border-zinc-700"
  )}
- onClick={() => toggleSection(key as keyof SectionConfig)}
+ onClick={() => toggleSection(config.id)}
  >
  {config.enabled && <LucideIcons.Check size={12} className="text-black" />}
  </div>
@@ -645,14 +641,14 @@ export const DevMode: React.FC<DevModeProps> = ({ data: baseData, onSave, onChan
  </div>
  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
  <button 
- onClick={() => moveSection(key as keyof SectionConfig, 'up')}
+ onClick={() => moveSection(config.id, 'up')}
  disabled={idx === 0}
  className="p-1.5 text-zinc-600 hover:text-white disabled:opacity-0 transition-colors"
  >
  <ArrowUp size={14} />
  </button>
  <button 
- onClick={() => moveSection(key as keyof SectionConfig, 'down')}
+ onClick={() => moveSection(config.id, 'down')}
  disabled={idx === arr.length - 1}
  className="p-1.5 text-zinc-600 hover:text-white disabled:opacity-0 transition-colors"
  >
