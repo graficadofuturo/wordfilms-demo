@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { SiteData, SectionConfig, StyleConfig, PortfolioItem, ServiceItem } from '../types';
-import { Save, Plus, Trash2, ArrowUp, ArrowDown, LogOut, Upload, Loader2, ChevronDown, ChevronUp, Smartphone, Monitor, Eye, X, Check, Mail, Instagram, MapPin, Phone, Globe, Youtube, Linkedin, Twitter, Facebook, MessageSquare, Send } from 'lucide-react';
+import { Save, Plus, Trash2, ArrowUp, ArrowDown, LogOut, Upload, Loader2, ChevronDown, ChevronUp, Smartphone, Monitor, Eye, X, Check, Mail, Share2 as Instagram, MapPin, Phone, Globe, Video as Youtube, Briefcase as Linkedin, X as Twitter, Users as Facebook, MessageSquare, Send } from 'lucide-react';
 import { GOOGLE_FONTS } from '../lib/fonts';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
