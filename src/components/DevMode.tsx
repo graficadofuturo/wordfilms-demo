@@ -1407,7 +1407,7 @@ export const DevMode: React.FC<DevModeProps> = ({ data: baseData, onSave, onChan
  </div>
 
  <div className="space-y-4">
- {(localData.contact || []).map((item, index) => (
+ {((localData.contact as any)?.items || []).map((item: any, index: number) => (
  <div key={index} className="bg-zinc-950/30 p-6 rounded-2xl border border-zinc-800/50 relative group">
  <button onClick={() => removeContactItem(index)} className="absolute top-4 right-4 text-zinc-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all">
  <Trash2 size={14} />
