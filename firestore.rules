@@ -1,0 +1,44 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: site
+    // Document ID: config
+    // Fields:
+    //   - hero: map (required)
+    //   - about: map (required)
+    //   - portfolio: list (required)
+    //   - services: list (required)
+    //   - contact: map (required)
+    //
+    // ===============================================================
+
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email == "graficadfuturo@gmail.com";
+    }
+
+    // Site configuration rules
+    match /site/config {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Portal data rules (accessible by portal key)
+    match /portals/{clientId} {
+      allow read, write: if true;
+    }
+    
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
