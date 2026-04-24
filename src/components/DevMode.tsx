@@ -631,13 +631,13 @@ export const DevMode: React.FC<DevModeProps> = ({ data: baseData, onSave, onChan
  <div 
  className={cn(
  "w-5 h-5 rounded-md border flex items-center justify-center transition-all cursor-pointer",
- config.enabled ? "bg-emerald-500 border-emerald-500" : "border-zinc-700"
+ config.visible ? "bg-emerald-500 border-emerald-500" : "border-zinc-700"
  )}
  onClick={() => toggleSection(config.id)}
  >
- {config.enabled && <LucideIcons.Check size={12} className="text-black" />}
+ {config.visible && <LucideIcons.Check size={12} className="text-black" />}
  </div>
- <span className="text-[10px] font-black uppercase tracking-widest text-white">{key}</span>
+ <span className="text-[10px] font-black uppercase tracking-widest text-white">{config.type}</span>
  </div>
  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
  <button 
